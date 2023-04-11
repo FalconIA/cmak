@@ -5,9 +5,9 @@
 name := """cmak"""
 
 /* For packaging purposes, -SNAPSHOT MUST contain a digit */
-version := "3.0.0.7"
+version := "3.0.0.7-SNAPSHOT"
 
-scalaVersion := "2.12.10"
+scalaVersion := "2.12.17"
 
 scalacOptions ++= Seq("-Xlint:-missing-interpolator","-Xfatal-warnings","-deprecation","-feature","-language:implicitConversions","-language:postfixOps","-Xmax-classfile-name","240")
 
