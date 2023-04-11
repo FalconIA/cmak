@@ -20,7 +20,6 @@ package kafka.manager.utils.zero11
 import java.util.{Collections, Locale, Properties}
 import kafka.manager._
 import scala.collection.JavaConverters._
-import kafka.api.ApiVersion
 import kafka.manager.utils.TopicConfigs
 import kafka.message.BrokerCompressionCodec
 import kafka.server.{KafkaConfig, ThrottledReplicaListValidator}
@@ -28,6 +27,7 @@ import org.apache.kafka.common.errors.InvalidConfigurationException
 import org.apache.kafka.common.config.{AbstractConfig, ConfigDef, TopicConfig}
 import org.apache.kafka.common.record.{LegacyRecord, TimestampType}
 import org.apache.kafka.common.utils.Utils
+import org.apache.kafka.server.common.MetadataVersion
 
 import scala.collection.mutable
 import org.apache.kafka.common.config.ConfigDef.{ConfigKey, ValidList, Validator}
@@ -85,7 +85,7 @@ case class LogConfig(props: java.util.Map[_, _]) extends AbstractConfig(LogConfi
   val minInSyncReplicas = getInt(LogConfig.MinInSyncReplicasProp)
   val compressionType = getString(LogConfig.CompressionTypeProp).toLowerCase(Locale.ROOT)
   val preallocate = getBoolean(LogConfig.PreAllocateEnableProp)
-  val messageFormatVersion = ApiVersion(getString(LogConfig.MessageFormatVersionProp))
+  val messageFormatVersion = MetadataVersion.fromVersionString(getString(LogConfig.MessageFormatVersionProp))
   val messageTimestampType = TimestampType.forName(getString(LogConfig.MessageTimestampTypeProp))
   val messageTimestampDifferenceMaxMs = getLong(LogConfig.MessageTimestampDifferenceMaxMsProp).longValue
   val LeaderReplicationThrottledReplicas = getList(LogConfig.LeaderReplicationThrottledReplicasProp)
@@ -139,7 +139,7 @@ object LogConfig extends TopicConfigs {
   val RetentionSizeDoc = TopicConfig.RETENTION_BYTES_DOC
   val RetentionMsDoc = TopicConfig.RETENTION_MS_DOC
   val MaxMessageSizeDoc = TopicConfig.MAX_MESSAGE_BYTES_DOC
-  val IndexIntervalDoc = TopicConfig.INDEX_INTERVAL_BYTES_DOCS
+  val IndexIntervalDoc = TopicConfig.INDEX_INTERVAL_BYTES_DOC
   val FileDeleteDelayMsDoc = TopicConfig.FILE_DELETE_DELAY_MS_DOC
   val DeleteRetentionMsDoc = TopicConfig.DELETE_RETENTION_MS_DOC
   val MinCompactionLagMsDoc = TopicConfig.MIN_COMPACTION_LAG_MS_DOC
@@ -149,6 +149,7 @@ object LogConfig extends TopicConfigs {
   val MinInSyncReplicasDoc = TopicConfig.MIN_IN_SYNC_REPLICAS_DOC
   val CompressionTypeDoc = TopicConfig.COMPRESSION_TYPE_DOC
   val PreAllocateEnableDoc = TopicConfig.PREALLOCATE_DOC
+  @deprecated("See `TopicConfig.MESSAGE_FORMAT_VERSION_CONFIG` for details", "3.0.0.7")
   val MessageFormatVersionDoc = TopicConfig.MESSAGE_FORMAT_VERSION_DOC
   val MessageTimestampTypeDoc = TopicConfig.MESSAGE_TIMESTAMP_TYPE_DOC
   val MessageTimestampDifferenceMaxMsDoc = TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_DOC

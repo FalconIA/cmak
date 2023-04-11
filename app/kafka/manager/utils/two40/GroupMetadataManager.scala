@@ -23,8 +23,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Optional
 import java.util.concurrent.locks.ReentrantLock
 
-import kafka.api.{ApiVersion, KAFKA_2_1_IV0, KAFKA_2_1_IV1}
-import kafka.common.{MessageFormatter, OffsetAndMetadata}
+import kafka.common.OffsetAndMetadata
 import kafka.coordinator.group.JoinGroupResult
 import kafka.utils.{CoreUtils, Logging, nonthreadsafe}
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -33,7 +32,8 @@ import org.apache.kafka.common.protocol.types.Type._
 import org.apache.kafka.common.protocol.types._
 import org.apache.kafka.common.record._
 import org.apache.kafka.common.utils.Time
-import org.apache.kafka.common.{KafkaException, TopicPartition}
+import org.apache.kafka.common.{KafkaException, MessageFormatter, TopicPartition}
+import org.apache.kafka.server.common.MetadataVersion
 
 import scala.collection.JavaConverters._
 import scala.collection.{Seq, immutable, mutable, _}
@@ -609,10 +609,10 @@ object GroupMetadataManager {
    * @return payload for offset commit message
    */
   def offsetCommitValue(offsetAndMetadata: OffsetAndMetadata,
-                        apiVersion: ApiVersion): Array[Byte] = {
+                        apiVersion: MetadataVersion): Array[Byte] = {
     // generate commit value according to schema version
     val (version, value) = {
-      if (apiVersion < KAFKA_2_1_IV0 || offsetAndMetadata.expireTimestamp.nonEmpty) {
+      if (apiVersion.isLessThan(MetadataVersion.IBP_2_1_IV0) || offsetAndMetadata.expireTimestamp.nonEmpty) {
         val value = new Struct(OFFSET_COMMIT_VALUE_SCHEMA_V1)
         value.set(OFFSET_VALUE_OFFSET_FIELD_V1, offsetAndMetadata.offset)
         value.set(OFFSET_VALUE_METADATA_FIELD_V1, offsetAndMetadata.metadata)
@@ -621,7 +621,7 @@ object GroupMetadataManager {
         value.set(OFFSET_VALUE_EXPIRE_TIMESTAMP_FIELD_V1,
           offsetAndMetadata.expireTimestamp.getOrElse(-1L))
         (1, value)
-      } else if (apiVersion < KAFKA_2_1_IV1) {
+      } else if (apiVersion.isLessThan(MetadataVersion.IBP_2_1_IV1)) {
         val value = new Struct(OFFSET_COMMIT_VALUE_SCHEMA_V2)
         value.set(OFFSET_VALUE_OFFSET_FIELD_V2, offsetAndMetadata.offset)
         value.set(OFFSET_VALUE_METADATA_FIELD_V2, offsetAndMetadata.metadata)
@@ -716,7 +716,7 @@ object GroupMetadataManager {
         val commitTimestamp = value.get(OFFSET_VALUE_COMMIT_TIMESTAMP_FIELD_V3).asInstanceOf[Long]
 
         val leaderEpochOpt: Optional[Integer] = if (leaderEpoch < 0) Optional.empty() else Optional.of(leaderEpoch)
-        OffsetAndMetadata(offset, leaderEpochOpt, metadata, commitTimestamp)
+        OffsetAndMetadata(offset, leaderEpochOpt, metadata, commitTimestamp, None)
       } else {
         throw new IllegalStateException(s"Unknown offset message version: $version")
       }

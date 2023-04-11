@@ -12,6 +12,11 @@ import grizzled.slf4j.Logging
 Override Kafka Client's implementation since we don't want to always report to Jmx
  */
 class JmxReporter(prefix: String) extends MetricsReporter with Logging {
+
+  def this() {
+    this("")
+  }
+
   override def init(metrics: util.List[KafkaMetric]): Unit = {}
 
   override def metricChange(metric: KafkaMetric): Unit = {}
